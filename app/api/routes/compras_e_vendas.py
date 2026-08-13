@@ -1,11 +1,10 @@
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
-from database.session import get_db
-from models.models_produtos import Products
-from models.models_transacoes import Transacoes
-from models.models_usuarios import Users
-from schemas.schemas_transacoes import RealizarTransacaoSchema, RespostaTransacaoSchema
-
+from app.database.session import get_db
+from app.models.models_produtos import Products
+from app.models.models_transacoes import Transacoes
+from app.models.models_usuarios import Users
+from app.schemas.schemas_transacoes import RealizarTransacaoSchema, RespostaTransacaoSchema
 
 compras_e_vendas = APIRouter(tags=["Compras e Vendas"])
 

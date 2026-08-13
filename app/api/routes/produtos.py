@@ -1,19 +1,23 @@
 from fastapi import FastAPI, APIRouter, Depends, HTTPException
-from database.session import get_db
-from models.models_produtos import Products
-from schemas.schemas_produtos import (CriarProdutoSchema, RespostaProdutoSchema, ListarProdutosResponseSchema, AtualizarProdutoSchema, RespostaAtualizarProdutoSchema, RespostaDeletarProdutoSchema,
+from app.database.session import get_db
+from app.models.models_produtos import Products
+from app.schemas.schemas_produtos import (CriarProdutoSchema, RespostaProdutoSchema, ListarProdutosResponseSchema, AtualizarProdutoSchema, RespostaAtualizarProdutoSchema, RespostaDeletarProdutoSchema,
 DonoResumoSchema, ProdutoComDonoSchema)
-from models.models_usuarios import Users
+from app.models.models_usuarios import Users
 from typing import List
 from sqlalchemy.orm import Session
+
 
 produtos = APIRouter(tags=["Cadastro de Produtos"])
 
 @produtos.post("/criar-produtos/")
 async def cadastrar_produto(produto: CriarProdutoSchema, db=Depends(get_db)):
-    usuario = db.query(Users).filter(Users.email == produto.email_do_usuario).first()
+    usuario = db.query(Users).filter(Users.nome == produto.nome_do_usuario, Users.email == produto.email_do_usuario, Users.senha == produto.senha_do_usuario).first()
     if not usuario:
         raise HTTPException(status_code=404, detail="Usuário não encontrado, é necessário criar um usuário antes de cadastrar um produto.")
+
+    if usuario.email != produto.email_do_usuario:
+        raise HTTPException(status_code=401, detail="Email incorreto.")
 
     if usuario.senha != produto.senha_do_usuario:
         raise HTTPException(status_code=401, detail="Senha incorreta.")
@@ -22,7 +26,6 @@ async def cadastrar_produto(produto: CriarProdutoSchema, db=Depends(get_db)):
         nome=produto.nome,
         descricao=produto.descricao,
         preco=produto.preco,
-        owner_id=usuario.id
     )
     db.add(novo_produto)
     db.commit()
@@ -35,7 +38,6 @@ async def listar_produtos(user_id: int, db=Depends(get_db)):
     usuario = db.query(Users).filter(Users.id == user_id).first()
     if not usuario:
         raise HTTPException(status_code=404, detail="Usuário não encontrado.")
-
     produtos = db.query(Products).filter(Products.owner_id == user_id).all()
     return ListarProdutosResponseSchema(produtos=produtos, message="Produtos listados com sucesso.")
 
@@ -59,6 +61,9 @@ async def atualizar_produto(produto_id: int, produto_atualizado: AtualizarProdut
 
 @produtos.delete("/deletar-produtos/{produto_id}")
 async def deletar_produto(produto_id: int, db=Depends(get_db)):
+    usuario = db.query(Users).filter(Users.id == produto_id).first()
+    if not usuario:
+        raise HTTPException(status_code=404, detail="Usuário não encontrado.")
     produto = db.query(Products).filter(Products.id == produto_id).first()
     if not produto:
         raise HTTPException(status_code=404, detail="Produto não encontrado.")

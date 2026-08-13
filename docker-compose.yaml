@@ -3,7 +3,7 @@ version: "3.8"
 services:
   postgres:
     image: postgres:16
-    container_name: estoque_postgres
+    container_name: estoque_e_vendas_postgres
 
     environment:
       POSTGRES_USER: ${DB_USER}
@@ -18,7 +18,7 @@ services:
   fastapi:
 
     build: .
-    container_name: estoque_fastapi
+    container_name: estoque_e_vendas_fastapi
     restart: always
     ports:
       - "8000:8000"

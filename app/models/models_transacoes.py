@@ -1,6 +1,6 @@
 from sqlalchemy import Column, DateTime, Float, ForeignKey, Integer, String
 from sqlalchemy.orm import relationship
-from database.session import Base
+from app.database.session import Base
 from datetime import datetime
 
 class Transacoes(Base):
@@ -17,7 +17,7 @@ class Transacoes(Base):
 
     data_transacao = Column(DateTime, nullable=False, default=datetime.utcnow)
 
-    user = relationship("Users", back_populates="transacoes")
+    user = relationship("Users", foreign_keys=[owner_id], back_populates="transacoes")
 
 
 class Historico(Base):
@@ -29,4 +29,4 @@ class Historico(Base):
     novo_dono_id = Column(Integer, ForeignKey("users.id"), nullable=False)
     data_transacao = Column(DateTime, nullable=False, default=datetime.utcnow)
 
-    user = relationship("Users", back_populates="historico")
+    user = relationship("Users", foreign_keys=[novo_dono_id], back_populates="historico")

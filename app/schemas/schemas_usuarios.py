@@ -11,7 +11,6 @@ class RespostaUsuarioSchema(BaseModel):
     email: EmailStr
     message: str
 
-    model_config = {"from_attributes": True}
 # verificar usuários
 class VerificarUsuarioSchema(BaseModel):
     email: EmailStr
@@ -19,6 +18,7 @@ class VerificarUsuarioSchema(BaseModel):
 class RespostaVerificarUsuarioSchema(BaseModel):
     nome: str
     email: EmailStr
+    message: str
 
 # atualizar usuários
 class AtualizarUsuarioSchema(BaseModel):
@@ -26,9 +26,16 @@ class AtualizarUsuarioSchema(BaseModel):
     email: EmailStr = Field(..., min_length=1, max_length=100)
 # vai ser usado como resposta o respostausuarioschema
 
+class AlterarSenha(BaseModel):
+    nome: str
+    email: EmailStr
+    nova_senha: str
+
 class DeletarUsuarioSchema(BaseModel):
     nome: str
     email: EmailStr
+    senha: str = Field(..., min_length=6)
 #a mesma coisa, vai ser usado como resposta o respostausuarioschema
-
+    class Config:
+        from_attributes = True
     
