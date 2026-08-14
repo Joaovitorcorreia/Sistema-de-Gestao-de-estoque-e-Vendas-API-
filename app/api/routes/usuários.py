@@ -1,3 +1,4 @@
+
 from fastapi import APIRouter, Depends, HTTPException
 from fastapi.security import OAuth2PasswordRequestForm
 from sqlalchemy.exc import IntegrityError
@@ -12,7 +13,7 @@ cadastro = APIRouter(tags=["Cadastro de Usuários"])
 auth = APIRouter(tags=["Criar Token de autenticação"])
 alteração_de_senha = APIRouter(tags=["Alteração de Senha"])
 
-@cadastro.post("/criar-usuários/", response_model=RespostaUsuarioSchema)
+@cadastro.post("/criar-usuários", response_model=RespostaUsuarioSchema)
 async def cadastrar_usuario(usuario: CriarUsuarioSchema, db=Depends(get_db)):
     try:
         novo_usuario = Users(nome=usuario.nome, email=usuario.email, senha=gerar_hash_senha(usuario.senha))
@@ -25,13 +26,13 @@ async def cadastrar_usuario(usuario: CriarUsuarioSchema, db=Depends(get_db)):
 
     return RespostaUsuarioSchema(nome=novo_usuario.nome, email=novo_usuario.email, message="Usuário cadastrado com sucesso.")
 
-@cadastro.get("/verificar-usuários/{user_id}", response_model=RespostaVerificarUsuarioSchema)
-async def verificar_usuario(usuario: VerificarUsuarioSchema, db=Depends(get_db)):
-    usuario = db.query(Users).filter(Users.email == user.email).first()
+@cadastro.get("/verificar-usuários", response_model=RespostaVerificarUsuarioSchema)
+async def verificar_usuario(email: str, db=Depends(get_db)):
+    usuario = db.query(Users).filter(Users.email == email).first()
     if not usuario:
         raise HTTPException(status_code=404, detail="Usuário não encontrado.")
 
-    return RespostaVerificarUsuarioSchema(nome=usuario.nome, email=usuario.email, produtos=usuario.products)
+    return RespostaVerificarUsuarioSchema(nome=usuario.nome, email=usuario.email, message="Usuário encontrado com sucesso.")
 
 @cadastro.put("/atualizar-usuários/{user_id}", response_model=RespostaUsuarioSchema)
 async def atualizar_usuario(usuario_atualizado: AtualizarUsuarioSchema, db=Depends(get_db)):

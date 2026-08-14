@@ -3,7 +3,9 @@ from app.api.routes.usuários import cadastro, auth, alteração_de_senha
 from app.api.routes.produtos import produtos
 from app.api.routes.compras_e_vendas import compras_e_vendas
 from app.api.routes.produtos import produtos_disponiveis
-from app.database.session import Base, engine
+from app.models.models_usuarios import Users
+from app.models.models_produtos import Products
+
 from app.database.session import Base, engine
 
 Base.metadata.create_all(bind=engine)
