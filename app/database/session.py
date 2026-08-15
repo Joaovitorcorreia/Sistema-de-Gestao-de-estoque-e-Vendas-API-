@@ -14,7 +14,7 @@ SQLALCHEMY_DATABASE_URL = os.getenv("DATABASE_URL")
 
 
 # Create engine with pool pre-ping to handle dropped connections
-engine = create_engine(SQLALCHEMY_DATABASE_URL, pool_pre_ping=True)
+engine = create_engine(SQLALCHEMY_DATABASE_URL)
 
 SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
 Base = declarative_base()
