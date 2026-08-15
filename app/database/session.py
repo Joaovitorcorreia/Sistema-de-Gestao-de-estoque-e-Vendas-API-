@@ -8,12 +8,8 @@ load_dotenv()
 os.environ["PGCLIENTENDCODING"] = "utf-8"
 os.environ["LC_ALL"] = "C"
 
-# Get database URL from environment. PostgreSQL is required for this deployment.
+
 SQLALCHEMY_DATABASE_URL = os.getenv("DATABASE_URL")
-
-
-
-# Create engine with pool pre-ping to handle dropped connections
 engine = create_engine(SQLALCHEMY_DATABASE_URL)
 
 SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
