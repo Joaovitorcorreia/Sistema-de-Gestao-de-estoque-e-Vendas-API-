@@ -1,8 +1,10 @@
 from fastapi import FastAPI, APIRouter, Depends, HTTPException
 from app.database.session import get_db
 from app.models.models_produtos import Products
-from app.schemas.schemas_produtos import (CriarProdutoSchema, RespostaProdutoSchema, ListarProdutosResponseSchema, AtualizarProdutoSchema, RespostaAtualizarProdutoSchema, RespostaDeletarProdutoSchema,
+from app.schemas.schemas_produtos import (CriarProdutoSchema, RespostaProdutoSchema, ListarProdutosSchema, ListarProdutosResponseSchema, AtualizarProdutoSchema, RespostaAtualizarProdutoSchema, DeletarProdutoSchema, RespostaDeletarProdutoSchema,
 DonoResumoSchema, ProdutoComDonoSchema)
+from app.core.security import verificar_senha
+from app.core.auth_token import verificar_token
 from app.models.models_usuarios import Users
 from typing import List
 from sqlalchemy.orm import Session
@@ -12,20 +14,21 @@ produtos = APIRouter(tags=["Cadastro de Produtos"])
 
 @produtos.post("/criar-produtos/")
 async def cadastrar_produto(produto: CriarProdutoSchema, db=Depends(get_db)):
-    usuario = db.query(Users).filter(Users.nome == produto.nome_do_usuario, Users.email == produto.email_do_usuario, Users.senha == produto.senha_do_usuario).first()
+    usuario = db.query(Users).filter(Users.nome == produto.nome_do_usuario, Users.email == produto.email_do_usuario).first()
     if not usuario:
         raise HTTPException(status_code=404, detail="Usuário não encontrado, é necessário criar um usuário antes de cadastrar um produto.")
 
+    if not verificar_senha(produto.senha_do_usuario, usuario.senha):
+        raise HTTPException(status_code=401, detail="Senha incorreta.")
+
     if usuario.email != produto.email_do_usuario:
         raise HTTPException(status_code=401, detail="Email incorreto.")
-
-    if usuario.senha != produto.senha_do_usuario:
-        raise HTTPException(status_code=401, detail="Senha incorreta.")
 
     novo_produto = Products(
         nome=produto.nome,
         descricao=produto.descricao,
         preco=produto.preco,
+        owner_id=usuario.id
     )
     db.add(novo_produto)
     db.commit()
@@ -34,18 +37,29 @@ async def cadastrar_produto(produto: CriarProdutoSchema, db=Depends(get_db)):
     return RespostaProdutoSchema(nome=novo_produto.nome, descricao=novo_produto.descricao, preco=novo_produto.preco, message="Produto cadastrado com sucesso.")
 
 @produtos.get("/listar-produtos/{user_id}")
-async def listar_produtos(user_id: int, db=Depends(get_db)):
-    usuario = db.query(Users).filter(Users.id == user_id).first()
+async def listar_produtos(usuario_email: str, db=Depends(get_db)):
+    usuario = db.query(Users).filter(Users.email == usuario_email).first()
     if not usuario:
         raise HTTPException(status_code=404, detail="Usuário não encontrado.")
-    produtos = db.query(Products).filter(Products.owner_id == user_id).all()
-    return ListarProdutosResponseSchema(produtos=produtos, message="Produtos listados com sucesso.")
+    produtos = db.query(Products).filter(Products.owner_id == usuario.id).all()
+    produtos_schema = [ListarProdutosSchema.model_validate(p) for p in produtos]
+    return ListarProdutosResponseSchema(produtos=produtos_schema, message="Produtos listados com sucesso.")
 
-@produtos.put("/atualizar-produtos/{produto_id}")
-async def atualizar_produto(produto_id: int, produto_atualizado: AtualizarProdutoSchema, db=Depends(get_db)):
-    produto = db.query(Products).filter(Products.id == produto_id).first()
+
+@produtos.put("/atualizar-produtos", response_model=RespostaAtualizarProdutoSchema)
+async def atualizar_produto(produto_atualizado: AtualizarProdutoSchema, token_payload: dict = Depends(verificar_token), db=Depends(get_db)):
+
+    """Observação: Voçê deve estar autenticado antes de atualizar o produto"""
+
+    usuario_email = token_payload.get("sub")
+
+    usuario = db.query(Users).filter(Users.email == usuario_email).first()
+    if not usuario:
+        raise HTTPException(status_code=404, detail="Usuário não encontrado ou token inválido.")
+
+    produto = db.query(Products).filter(Products.nome == produto_atualizado.nome_do_antigo_produto, Products.owner_id == usuario.id).first()
     if not produto:
-        raise HTTPException(status_code=404, detail="Produto não encontrado.")
+        raise HTTPException(status_code=404, detail="Produto não encontrado ou não pertence ao usuário.")
 
     if produto_atualizado.nome is not None:
         produto.nome = produto_atualizado.nome
@@ -59,12 +73,15 @@ async def atualizar_produto(produto_id: int, produto_atualizado: AtualizarProdut
 
     return RespostaAtualizarProdutoSchema(nome=produto.nome, descricao=produto.descricao, preco=produto.preco, message="Produto atualizado com sucesso.")
 
-@produtos.delete("/deletar-produtos/{produto_id}")
-async def deletar_produto(produto_id: int, db=Depends(get_db)):
-    usuario = db.query(Users).filter(Users.id == produto_id).first()
+@produtos.delete("/deletar-produtos")
+async def deletar_produto(produto_deletar: DeletarProdutoSchema, token_payload: dict = Depends(verificar_token), db=Depends(get_db)):
+    usuario_email = token_payload.get("sub")
+    usuario = db.query(Users).filter(Users.email == usuario_email).first()
+
     if not usuario:
-        raise HTTPException(status_code=404, detail="Usuário não encontrado.")
-    produto = db.query(Products).filter(Products.id == produto_id).first()
+        raise HTTPException(status_code=404, detail="Usuário não encontrado ou token inválido.")
+    
+    produto = db.query(Products).filter(Products.nome == produto_deletar.nome, Products.descricao == produto_deletar.descricao, Products.preco == produto_deletar.preco ).first()
     if not produto:
         raise HTTPException(status_code=404, detail="Produto não encontrado.")
 
@@ -76,12 +93,8 @@ async def deletar_produto(produto_id: int, db=Depends(get_db)):
 # lista todos os produtos cadastrados
 produtos_disponiveis = APIRouter(tags=["Produtos Disponíveis para Comercialização"])
 
-@produtos_disponiveis.get("/Todos-os-produtos-existentes-para-comercialização/{produto_id}", response_model=List[ProdutoComDonoSchema])
-async def obter_produto_com_dono(produto_id: int, db=Depends(get_db)):
-    produto = db.query(Products).filter(Products.id == produto_id).first()
-    if not produto:
-        raise HTTPException(status_code=404, detail="Produto não encontrado.")
-
+@produtos_disponiveis.get("/Todos-os-produtos-existentes-para-comercialização", response_model=List[ProdutoComDonoSchema])
+async def obter_produto_com_dono(db: Session = Depends(get_db)):
     todos_os_produtos = db.query(Products).all()
     return todos_os_produtos
 

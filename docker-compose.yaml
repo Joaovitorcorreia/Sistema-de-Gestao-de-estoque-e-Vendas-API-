@@ -10,13 +10,12 @@ services:
       POSTGRES_PASSWORD: ${DB_PASSWORD}
       POSTGRES_DB: ${DB_NAME}
     ports:
-      - "5432:5432"
-
+      - "5434:5432"
     volumes:
-      - postgres_data:/var/lib/postgresql/data
+      - pg_data:/var/lib/postgresql/data
 
-  fastapi:
 
+  fastapi-app:
     build: .
     container_name: estoque_e_vendas_fastapi
     restart: always
@@ -26,6 +25,8 @@ services:
       - postgres
     env_file:
       - .env
+    environment:
+      DATABASE_URL: postgresql://${DB_USER}:${DB_PASSWORD}@postgres:${DB_PORT}/${DB_NAME}
 
 volumes:
-  postgres_data:
+  pg_data:

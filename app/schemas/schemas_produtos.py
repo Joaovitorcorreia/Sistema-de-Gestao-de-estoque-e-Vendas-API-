@@ -1,4 +1,4 @@
-from pydantic import BaseModel, EmailStr, Field
+from pydantic import BaseModel, EmailStr, Field, ConfigDict
 
 
 # criar produtos
@@ -19,16 +19,25 @@ class RespostaProdutoSchema(BaseModel):
 
 # listar produtos
 class ListarProdutosSchema(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
+
     nome: str
     descricao: str
     preco: float
+
 
 class ListarProdutosResponseSchema(BaseModel):
     produtos: list[ListarProdutosSchema]
     message: str = Field(..., example="Produtos listados com sucesso.")
 
+    class Config:
+        from_attributes: True
+
 # atualizar produtos
 class AtualizarProdutoSchema(BaseModel):
+
+    nome_do_antigo_produto: str
+    senha_do_usuario: str
     nome: str | None = Field(None, example="Produto Atualizado")
     descricao: str | None = Field(None, example="Descrição atualizada do produto")
     preco: float | None = Field(None, example=149.99)
@@ -41,6 +50,9 @@ class RespostaAtualizarProdutoSchema(BaseModel):
 
 # deletar produtos
 class DeletarProdutoSchema(BaseModel):
+
+    senha_do_usuario: str
+
     nome: str
     descricao: str
     preco: float
@@ -65,7 +77,7 @@ class ProdutoComDonoSchema(BaseModel):
     nome: str
     descricao: str
     preco: float
-    dono: DonoResumoSchema
+    owner: DonoResumoSchema
 
     class Config:
         from_attributes = True

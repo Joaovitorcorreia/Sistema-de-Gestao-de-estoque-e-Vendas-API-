@@ -1,4 +1,4 @@
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 from fastapi import Depends
 from fastapi.security import OAuth2PasswordBearer
 from dotenv import load_dotenv
@@ -8,7 +8,7 @@ import os
 load_dotenv()
 SECRET_KEY = os.getenv("SECRET_KEY")
 ALGORITHM = ALGORITHM = "HS256"
-oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/api/gerar_token/")
+oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/criar-token-de-acesso")
 
 def criar_token(data: dict, expires_delta: timedelta = None):
     to_encode = data.copy()
