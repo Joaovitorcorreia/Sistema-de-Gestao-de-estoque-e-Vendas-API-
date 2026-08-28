@@ -21,7 +21,6 @@ class Transacoes(Base):
 
     user = relationship("Users", foreign_keys=[owner_id], back_populates="transacoes")
 
-
 class Historico(Base):
     __tablename__ = "historico"
 

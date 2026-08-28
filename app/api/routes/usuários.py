@@ -50,7 +50,7 @@ async def atualizar_usuario(usuario_atualizado: AtualizarUsuarioSchema, db=Depen
 
     return RespostaUsuarioSchema(nome=usuario.nome, email=usuario.email, message="Usuário atualizado com sucesso.")
 
-# para atualizar a senha, você pode criar um endpoint separado que aceite a senha antiga e a nova senha, com o Jwt.
+
 @auth.post("/criar-token-de-acesso")
 async def criar_tokens(auth_form: OAuth2PasswordRequestForm = Depends(), db=Depends(get_db)):
     """Observação: É necessário somente preencher o campo 'nome' com o email do usuário e a senha, o resto deixar em branco. Somente o email do usuário é aceito como username, não o nome do usuário."""
@@ -103,6 +103,9 @@ async def alterar_senha(usuario: AlterarSenha, token_payload: dict = Depends(ver
 
 @cadastro.delete("/deletar-usuários", response_model=RespostaUsuarioSchema)
 async def deletar_usuario(usuario_delete: DeletarUsuarioSchema, db=Depends(get_db)):
+
+    """ATENÇÃO: Se voçê excluir seu usuario, TODOS os seus produtos cadastrados também será EXCLUÍDO"""
+
     usuario = db.query(Users).filter(Users.nome == usuario_delete.nome, Users.email == usuario_delete.email).first()
     if not usuario:
         raise HTTPException(status_code=404, detail="Usuário não encontrado.")

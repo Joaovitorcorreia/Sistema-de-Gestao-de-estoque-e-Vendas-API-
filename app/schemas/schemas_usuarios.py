@@ -24,7 +24,7 @@ class RespostaVerificarUsuarioSchema(BaseModel):
 class AtualizarUsuarioSchema(BaseModel):
     nome: str = Field(..., min_length=1, max_length=100)
     email: EmailStr = Field(..., min_length=1, max_length=100)
-    novo_nome: Optional[str] = Field(..., min_lenght=1, max_lenght=100)
+    novo_nome: Optional[str] = Field(..., min_length=1, max_length=100)
     novo_email: Optional[EmailStr] = Field(..., min_length=1, max_length=100)
 # vai ser usado como resposta o respostausuarioschema
 

@@ -9,7 +9,6 @@ class RealizarTransacaoSchema(BaseModel):
     valor: float = Field(..., example=99.99)
     metodo_pagamento: str = Field(..., example="Cartão de Crédito")
     
-# observação: quando usar o JWT, o email e a senha do vendedor não serão necessários, pois o JWT já vai validar o usuário logado.
 
 class RespostaTransacaoSchema(BaseModel):
     product_id: str
