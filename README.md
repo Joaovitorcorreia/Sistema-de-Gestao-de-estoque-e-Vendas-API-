@@ -167,13 +167,3 @@ Por que separar schemas, models, services e repositories?
 
 Caso ocorrer erros, ou procurar nomes de variáveis ou uma síntese específica, etc, irá conseguir encontrá-lo facilmente nesses arquivos, e também consegue estruturar a API de forma organizada.
 
-
-14. Melhorias futuras:
-
-Refresh token
-Rate limiting
-Redis
-CI/CD
-Deploy
-Monitoramento
-Logs estruturados
