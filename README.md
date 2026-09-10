@@ -40,6 +40,7 @@ Pytest
 
 5. Arquitetura do projeto
 
+```
 ├── alembic/
 │   ├── versions/
 │   ├── env.py
@@ -72,7 +73,7 @@ Pytest
 ├── docker-compose.yaml
 ├── README.md
 └── requirements.txt
-
+```
 
 6. Pré-requisitos
 
@@ -119,31 +120,22 @@ pytest (sendo testado algumas operações de rota dos usuários e produtos)
 12. Endpoints principais
 
 
-|   Método   |   Endpoint   |   Descrição   |   Categoria   |
-|------------|--------------|---------------|---------------|
-| POST       | /criar-usuarios | Cadastrar Usuário | Cadastro de Usuários |
-| GET        | /verificar-usuarios | Verificar Usuário | Cadastro de Usuários |
-| PUT        | /atualizar-usuarios/{user_id} | Atualizar Usuário | Cadastro de Usuários |
-| DELETE     | /deletar-usuarios/{user_id} | Deletar Usuário | Cadastro de Usuários |
-
-
-| POST       | /criar-produtos/ | Cadastrar Produto | Cadastro de Produtos |
-| GET        | /listar-produtos/{user_id} | Listar Produtos | Cadastro de Produtos |
-| PUT        | /atualizar-produtos | Atualizar Produto | Cadastro de Produtos |
-| DELETE     | /deletar-produtos | Deletar Produto | Cadastro de Produtos |
-
-| POST       | /realizar-transacao | Realizar Transação | Compras e Vendas |
-
-| GET        | /todos-os-produtos-existentes-para-comercializacao | Obter Produto Com Dono | Produtos Disponíveis |
-| GET        | /filtrar-produtos | Filtrar Produtos | Produtos Disponíveis |
-
-
-| POST       | /criar-token-de-acesso | Criar Tokens | Criar Token de Autenticação |
-| GET        | /verificar_tokens | Verificar Tokens | Criar Token de Autenticação |
-
-
-| PUT        | /alterar-senha | Alterar Senha | Alteração de Senha |
-
+| Método | Endpoint | Descrição | Categoria |
+| :--- | :--- | :--- | :--- |
+| `POST` | `/criar-usuarios` | Cadastrar Usuário | Cadastro de Usuários |
+| `GET` | `/verificar-usuarios` | Verificar Usuário | Cadastro de Usuários |
+| `PUT` | `/atualizar-usuarios/{user_id}` | Atualizar Usuário | Cadastro de Usuários |
+| `DELETE` | `/deletar-usuarios/{user_id}` | Deletar Usuário | Cadastro de Usuários |
+| `POST` | `/criar-produtos` | Cadastrar Produto | Cadastro de Produtos |
+| `GET` | `/listar-produtos/{user_id}` | Listar Produtos | Cadastro de Produtos |
+| `PUT` | `/atualizar-produtos` | Atualizar Produto | Cadastro de Produtos |
+| `DELETE` | `/deletar-produtos` | Deletar Produto | Cadastro de Produtos |
+| `POST` | `/realizar-transacao` | Realizar Transação | Compras e Vendas |
+| `GET` | `/todos-os-produtos-existentes-para-comercializacao` | Obter Produto Com Dono | Produtos Disponíveis |
+| `GET` | `/filtrar-produtos` | Filtrar Produtos | Produtos Disponíveis |
+| `POST` | `/criar-token-de-acesso` | Criar Token de Autenticação | Autenticação |
+| `GET` | `/verificar_tokens` | Verificar Tokens | Autenticação |
+| `PUT` | `/alterar-senha` | Alterar Senha | Alteração de Senha |
 
 13. Decisões técnicas:
 
