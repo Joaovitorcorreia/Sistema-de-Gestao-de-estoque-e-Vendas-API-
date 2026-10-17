@@ -1,0 +1,1 @@
+Obs: Essa ferramenta NÃO precisou ser utilizada, pois já tinha feito todas as tables e columns.

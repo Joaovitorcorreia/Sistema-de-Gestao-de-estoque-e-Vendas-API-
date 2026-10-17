@@ -1,4 +1,4 @@
-from fastapi import FastAPI, APIRouter, Depends, HTTPException
+from fastapi import FastAPI, APIRouter, Depends, HTTPException, status, Request
 from app.database.session import get_db
 from app.models.models_produtos import Products
 from app.schemas.schemas_produtos import (CriarProdutoSchema, RespostaProdutoSchema, ListarProdutosSchema, ListarProdutosResponseSchema, AtualizarProdutoSchema, RespostaAtualizarProdutoSchema, DeletarProdutoSchema, RespostaDeletarProdutoSchema,
@@ -9,11 +9,14 @@ from app.models.models_usuarios import Users
 from typing import List
 from sqlalchemy.orm import Session
 
+from app.api.routes.usuários import limiter
+
 
 produtos = APIRouter(tags=["Cadastro de Produtos"])
 
 @produtos.post("/criar-produtos/")
-async def cadastrar_produto(produto: CriarProdutoSchema, db=Depends(get_db)):
+@limiter.limit("5/minute", error_message="Limite de requisições excedido. Por favor, tente novamente mais tarde.")
+async def cadastrar_produto(request: Request, produto: CriarProdutoSchema, db=Depends(get_db)):
     usuario = db.query(Users).filter(Users.nome == produto.nome_do_usuario, Users.email == produto.email_do_usuario).first()
     if not usuario:
         raise HTTPException(status_code=404, detail="Usuário não encontrado, é necessário criar um usuário antes de cadastrar um produto.")
@@ -37,7 +40,8 @@ async def cadastrar_produto(produto: CriarProdutoSchema, db=Depends(get_db)):
     return RespostaProdutoSchema(nome=novo_produto.nome, descricao=novo_produto.descricao, preco=novo_produto.preco, message="Produto cadastrado com sucesso.")
 
 @produtos.get("/listar-produtos/{user_id}")
-async def listar_produtos(usuario_email: str, db=Depends(get_db)):
+@limiter.limit("5/minute", error_message="Limite de requisições excedido. Por favor, tente novamente mais tarde.")   
+async def listar_produtos(request: Request, usuario_email: str, db=Depends(get_db)):
     usuario = db.query(Users).filter(Users.email == usuario_email).first()
     if not usuario:
         raise HTTPException(status_code=404, detail="Usuário não encontrado.")
@@ -47,7 +51,8 @@ async def listar_produtos(usuario_email: str, db=Depends(get_db)):
 
 
 @produtos.put("/atualizar-produtos", response_model=RespostaAtualizarProdutoSchema)
-async def atualizar_produto(produto_atualizado: AtualizarProdutoSchema, token_payload: dict = Depends(verificar_token), db=Depends(get_db)):
+@limiter.limit("5/minute", error_message="Limite de requisições excedido. Por favor, tente novamente mais tarde.")
+async def atualizar_produto(request: Request, produto_atualizado: AtualizarProdutoSchema, token_payload: dict = Depends(verificar_token), db=Depends(get_db)):
 
     """Observação: Voçê deve estar autenticado antes de atualizar o produto"""
 
@@ -74,7 +79,8 @@ async def atualizar_produto(produto_atualizado: AtualizarProdutoSchema, token_pa
     return RespostaAtualizarProdutoSchema(nome=produto.nome, descricao=produto.descricao, preco=produto.preco, message="Produto atualizado com sucesso.")
 
 @produtos.delete("/deletar-produtos")
-async def deletar_produto(produto_deletar: DeletarProdutoSchema, token_payload: dict = Depends(verificar_token), db=Depends(get_db)):
+@limiter.limit("5/minute", error_message="Limite de requisições excedido. Por favor, tente novamente mais tarde.")
+async def deletar_produto(request: Request, produto_deletar: DeletarProdutoSchema, token_payload: dict = Depends(verificar_token), db=Depends(get_db)):
     usuario_email = token_payload.get("sub")
     usuario = db.query(Users).filter(Users.email == usuario_email).first()
 
@@ -94,13 +100,15 @@ async def deletar_produto(produto_deletar: DeletarProdutoSchema, token_payload: 
 produtos_disponiveis = APIRouter(tags=["Produtos Disponíveis para Comercialização"])
 
 @produtos_disponiveis.get("/Todos-os-produtos-existentes-para-comercialização", response_model=List[ProdutoComDonoSchema])
-async def obter_produto_com_dono(db: Session = Depends(get_db)):
+@limiter.limit("10/minute", error_message="Limite de requisições excedido. Por favor, tente novamente mais tarde.")
+async def obter_produto_com_dono(request: Request, db: Session = Depends(get_db)):
     todos_os_produtos = db.query(Products).all()
     return todos_os_produtos
 
 # filtrar produtos
 @produtos_disponiveis.get("/Filtrar-produtos", response_model=List[ProdutoComDonoSchema])
-async def filtrar_produtos(nome: str | None = None, descricao: str | None = None, preco_min: float | None = None, preco_max: float | None = None, db=Depends(get_db)):
+@limiter.limit("5/minute", error_message="Limite de requisições excedido. Por favor, tente novamente mais tarde.")
+async def filtrar_produtos(request: Request, nome: str | None = None, descricao: str | None = None, preco_min: float | None = None, preco_max: float | None = None, db=Depends(get_db)):
     query = db.query(Products)
 
     if nome:

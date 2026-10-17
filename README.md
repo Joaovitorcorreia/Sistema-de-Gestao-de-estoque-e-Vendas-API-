@@ -119,7 +119,7 @@ pytest (sendo testado algumas operações de rota dos usuários e produtos)
 
 12. Endpoints principais
 
-
+```
 | Método | Endpoint | Descrição | Categoria |
 | :--- | :--- | :--- | :--- |
 | `POST` | `/criar-usuarios` | Cadastrar Usuário | Cadastro de Usuários |
@@ -137,6 +137,7 @@ pytest (sendo testado algumas operações de rota dos usuários e produtos)
 | `GET` | `/verificar_tokens` | Verificar Tokens | Autenticação |
 | `PUT` | `/alterar-senha` | Alterar Senha | Alteração de Senha |
 
+```
 13. Decisões técnicas:
 
 

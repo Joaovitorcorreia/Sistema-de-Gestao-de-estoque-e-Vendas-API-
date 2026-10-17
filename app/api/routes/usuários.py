@@ -1,5 +1,5 @@
 
-from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi import APIRouter, Depends, HTTPException, status, Request
 from fastapi.security import OAuth2PasswordRequestForm
 from sqlalchemy.exc import IntegrityError
 from app.schemas.schemas_usuarios import CriarUsuarioSchema, RespostaUsuarioSchema, VerificarUsuarioSchema, RespostaVerificarUsuarioSchema, AtualizarUsuarioSchema, DeletarUsuarioSchema, AlterarSenha
@@ -8,13 +8,18 @@ from app.models.models_usuarios import Users
 from app.core.security import gerar_hash_senha, verificar_senha
 from app.core.auth_token import criar_token, verificar_token, oauth2_scheme
 
+from slowapi import Limiter
+from slowapi.util import get_remote_address
+limiter = Limiter(key_func=get_remote_address)
+
 
 cadastro = APIRouter(tags=["Cadastro de Usuários"])
 auth = APIRouter(tags=["Criar Token de autenticação"])
 alteração_de_senha = APIRouter(tags=["Alteração de Senha"])
 
 @cadastro.post("/criar-usuários", response_model=RespostaUsuarioSchema)
-async def cadastrar_usuario(usuario: CriarUsuarioSchema, db=Depends(get_db)):
+@limiter.limit("5/minute", error_message="Limite de requisições excedido. Por favor, tente novamente mais tarde.")
+async def cadastrar_usuario(request: Request, usuario: CriarUsuarioSchema, db=Depends(get_db)):
     try:
         novo_usuario = Users(nome=usuario.nome, email=usuario.email, senha=gerar_hash_senha(usuario.senha))
         db.add(novo_usuario)
@@ -27,7 +32,8 @@ async def cadastrar_usuario(usuario: CriarUsuarioSchema, db=Depends(get_db)):
     return RespostaUsuarioSchema(nome=novo_usuario.nome, email=novo_usuario.email, message="Usuário cadastrado com sucesso.")
 
 @cadastro.get("/verificar-usuários", response_model=RespostaVerificarUsuarioSchema)
-async def verificar_usuario(email: str, db=Depends(get_db)):
+@limiter.limit("5/minute", error_message="Limite de requisições excedido. Por favor, tente novamente mais tarde.")
+async def verificar_usuario(request: Request, email: str, db=Depends(get_db)):
     usuario = db.query(Users).filter(Users.email == email).first()
     if not usuario:
         raise HTTPException(status_code=404, detail="Usuário não encontrado.")
@@ -35,7 +41,8 @@ async def verificar_usuario(email: str, db=Depends(get_db)):
     return RespostaVerificarUsuarioSchema(nome=usuario.nome, email=usuario.email, message="Usuário encontrado com sucesso.")
 
 @cadastro.put("/atualizar-usuários/{user_id}", response_model=RespostaUsuarioSchema)
-async def atualizar_usuario(usuario_atualizado: AtualizarUsuarioSchema, db=Depends(get_db)):
+@limiter.limit("5/minute", error_message="Limite de requisições excedido. Por favor, tente novamente mais tarde.")
+async def atualizar_usuario(request: Request, usuario_atualizado: AtualizarUsuarioSchema, db=Depends(get_db)):
     usuario = db.query(Users).filter(Users.nome == usuario_atualizado.nome, Users.email == usuario_atualizado.email).first()
     if not usuario:
         raise HTTPException(status_code=404, detail="Usuário não encontrado.")
@@ -52,7 +59,8 @@ async def atualizar_usuario(usuario_atualizado: AtualizarUsuarioSchema, db=Depen
 
 
 @auth.post("/criar-token-de-acesso")
-async def criar_tokens(auth_form: OAuth2PasswordRequestForm = Depends(), db=Depends(get_db)):
+@limiter.limit("5/minute", error_message="Limite de requisições excedido. Por favor, tente novamente mais tarde.")
+async def criar_tokens(request: Request, auth_form: OAuth2PasswordRequestForm = Depends(), db=Depends(get_db)):
     """Observação: É necessário somente preencher o campo 'nome' com o email do usuário e a senha, o resto deixar em branco. Somente o email do usuário é aceito como username, não o nome do usuário."""
 
     usuario = db.query(Users).filter(Users.email == auth_form.username).first()
@@ -67,7 +75,8 @@ async def criar_tokens(auth_form: OAuth2PasswordRequestForm = Depends(), db=Depe
     return {"access_token": token, "token_type": "bearer"}
 
 @auth.get("/verificar_tokens")
-def verificar_tokens(token: str = Depends(oauth2_scheme)):
+@limiter.limit("5/minute", error_message="Limite de requisições excedido. Por favor, tente novamente mais tarde.")
+async def verificar_tokens(request: Request, token: str = Depends(oauth2_scheme)):
     payload = verificar_token(token)
     if "error" in payload:
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail=payload["error"])
@@ -75,7 +84,8 @@ def verificar_tokens(token: str = Depends(oauth2_scheme)):
 
     
 @alteração_de_senha.put("/alterar-senha", response_model=RespostaUsuarioSchema)
-async def alterar_senha(usuario: AlterarSenha, token_payload: dict = Depends(verificar_token), db=Depends(get_db)):
+@limiter.limit("5/minute", error_message="Limite de requisições excedido. Por favor, tente novamente mais tarde.")
+async def alterar_senha(request: Request, usuario: AlterarSenha, token_payload: dict = Depends(verificar_token), db=Depends(get_db)):
 
     usuario.email = token_payload.get("sub")
     """Observação: voçê deve antes de alterar a senha, criar e validar o token gerado"""
@@ -102,7 +112,8 @@ async def alterar_senha(usuario: AlterarSenha, token_payload: dict = Depends(ver
 
 
 @cadastro.delete("/deletar-usuários", response_model=RespostaUsuarioSchema)
-async def deletar_usuario(usuario_delete: DeletarUsuarioSchema, db=Depends(get_db)):
+@limiter.limit("5/minute", error_message="Limite de requisições excedido. Por favor, tente novamente mais tarde.")
+async def deletar_usuario(request: Request, usuario_delete: DeletarUsuarioSchema, db=Depends(get_db)):
 
     """ATENÇÃO: Se voçê excluir seu usuario, TODOS os seus produtos cadastrados também será EXCLUÍDO"""
 
